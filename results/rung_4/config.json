@@ -1,0 +1,19 @@
+{
+  "M": 2000,
+  "N": 50,
+  "T": 12,
+  "change_vs_rung_3": "graph structure -> clustered",
+  "d": 50,
+  "degroot": false,
+  "epochs": 800,
+  "kind": "clustered",
+  "n_clusters": 5,
+  "primary_metrics": "Spearman + top-k edge precision",
+  "rung": 4,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "sigma": 0.05
+}

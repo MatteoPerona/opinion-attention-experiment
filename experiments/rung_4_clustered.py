@@ -62,6 +62,7 @@ def run_one_seed(seed: int, args, out: Path) -> dict:
         epochs=args.epochs,
         batch_size=args.batch_size,
         lr=args.lr,
+        optimizer=args.optimizer,
     )
     with torch.no_grad():
         A_full = model.attention_matrix().cpu().numpy()
@@ -126,15 +127,16 @@ def main():
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--extra-seeds", type=str, default="")
     p.add_argument("--N", type=int, default=50)
-    p.add_argument("--M", type=int, default=200)
+    p.add_argument("--M", type=int, default=2000)
     p.add_argument("--T", type=int, default=12)
     p.add_argument("--d", type=int, default=50)
     p.add_argument("--sigma", type=float, default=0.05)
     p.add_argument("--kind", type=str, default="clustered", choices=["clustered", "sparse"])
     p.add_argument("--n-clusters", type=int, default=5)
-    p.add_argument("--epochs", type=int, default=500)
+    p.add_argument("--epochs", type=int, default=800)
     p.add_argument("--batch-size", type=int, default=256)
-    p.add_argument("--lr", type=float, default=1e-2)
+    p.add_argument("--lr", type=float, default=5e-3)
+    p.add_argument("--optimizer", type=str, default="adam", choices=["adam", "lbfgs"])
     p.add_argument("--ridge-alpha", type=float, default=1e-3)
     p.add_argument("--out", type=str, default="results/rung_4")
     args = p.parse_args()
