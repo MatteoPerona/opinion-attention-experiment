@@ -1,0 +1,43 @@
+{
+  "attn_spearman": 0.9989953404470615,
+  "per_seed": [
+    {
+      "attn_rel_frobenius": 0.024551224845178698,
+      "attn_spearman": 0.9989953404470615,
+      "final_train_loss": 1.261309847677694e-06,
+      "prediction_mse_heldout": 1.3200512967159739e-06,
+      "ridge_prediction_mse_heldout": 8.231600717755699e-14,
+      "ridge_rel_frobenius": 5.92310342885231e-06,
+      "ridge_spearman": 0.9999999923199988,
+      "seed": 0,
+      "state_cov_condition_number": 68.52416133676275
+    },
+    {
+      "attn_rel_frobenius": 0.026215737614773686,
+      "attn_spearman": 0.9989797872925701,
+      "final_train_loss": 1.3252713060296628e-06,
+      "prediction_mse_heldout": 1.4544433497576392e-06,
+      "ridge_prediction_mse_heldout": 7.061361941298407e-14,
+      "ridge_rel_frobenius": 5.601600221630236e-06,
+      "ridge_spearman": 0.9999999953919995,
+      "seed": 1,
+      "state_cov_condition_number": 52.086486213901736
+    },
+    {
+      "attn_rel_frobenius": 0.02268256397257314,
+      "attn_spearman": 0.9991419864227179,
+      "final_train_loss": 1.089682903909761e-06,
+      "prediction_mse_heldout": 1.0894651722992421e-06,
+      "ridge_prediction_mse_heldout": 7.40161085030095e-14,
+      "ridge_rel_frobenius": 5.4013966789619165e-06,
+      "ridge_spearman": 0.9999999961599995,
+      "seed": 2,
+      "state_cov_condition_number": 65.83667484910869
+    }
+  ],
+  "prediction_mse_heldout": 1.3200512967159739e-06,
+  "primary_metric": "rel_frobenius (attention A vs true W)",
+  "primary_value": 0.024551224845178698,
+  "ridge_rel_frobenius": 5.92310342885231e-06,
+  "state_cov_condition_number": 68.52416133676275
+}
