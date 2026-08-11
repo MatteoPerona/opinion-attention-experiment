@@ -1,0 +1,18 @@
+{
+  "M": 200,
+  "N": 50,
+  "T": 12,
+  "batch_size": 256,
+  "change_vs_rung_1": "process noise sigma=0.05",
+  "d": 50,
+  "degroot": true,
+  "epochs": 800,
+  "kind": "dense",
+  "lr": 0.005,
+  "ridge_alpha": 0.001,
+  "rung": 2,
+  "seeds": [
+    0
+  ],
+  "sigma": 0.05
+}

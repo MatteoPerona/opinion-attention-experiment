@@ -1,0 +1,21 @@
+{
+  "attn_spearman": 0.934303774960604,
+  "per_seed": [
+    {
+      "attn_rel_frobenius": 0.18962291857617136,
+      "attn_spearman": 0.934303774960604,
+      "final_train_loss": 0.0024542110331822187,
+      "prediction_mse_heldout": 0.002580178901553154,
+      "ridge_prediction_mse_heldout": 0.002590653967934152,
+      "ridge_rel_frobenius": 0.2006844719865705,
+      "ridge_spearman": 0.9338217504354801,
+      "seed": 0,
+      "state_cov_condition_number": 61.35019732440278
+    }
+  ],
+  "prediction_mse_heldout": 0.002580178901553154,
+  "primary_metric": "rel_frobenius (attention A vs true W)",
+  "primary_value": 0.18962291857617136,
+  "ridge_rel_frobenius": 0.2006844719865705,
+  "state_cov_condition_number": 61.35019732440278
+}
