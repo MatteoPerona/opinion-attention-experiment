@@ -107,14 +107,41 @@ def train_fj(
     batch_size: int,
     lr: float,
     device: str = "cpu",
+    optimizer: str = "adam",
 ) -> list[float]:
+    """
+    Train FJ anchor-token head.
+    optimizer: 'adam' (minibatch) or 'lbfgs' (full-batch; useful at N=50).
+    """
     model = model.to(device)
-    opt = torch.optim.Adam(model.parameters(), lr=lr)
     P = X.shape[0]
     losses = []
     Xt = torch.tensor(X, dtype=torch.float32, device=device)
     Yt = torch.tensor(Y, dtype=torch.float32, device=device)
     x0t = torch.tensor(x0, dtype=torch.float32, device=device)
+
+    if optimizer == "lbfgs":
+        opt = torch.optim.LBFGS(
+            model.parameters(),
+            lr=lr,
+            max_iter=20,
+            history_size=50,
+            line_search_fn="strong_wolfe",
+        )
+
+        for ep in range(epochs):
+            def closure():
+                opt.zero_grad()
+                pred = model(Xt, x0t)
+                loss = torch.mean((pred - Yt) ** 2)
+                loss.backward()
+                return loss
+
+            loss = opt.step(closure)
+            losses.append(float(loss.detach().item()))
+        return losses
+
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
     for ep in range(epochs):
         perm = torch.randperm(P, device=device)
         ep_loss = 0.0

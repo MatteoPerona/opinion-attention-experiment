@@ -1,0 +1,25 @@
+{
+  "per_seed": [
+    {
+      "attn_rel_frobenius_vs_LambdaW": 0.6116458231214954,
+      "attn_rel_frobenius_vs_W_rescaled": 0.5034331069416957,
+      "attn_spearman_vs_LambdaW": 0.016295230127512876,
+      "final_train_loss": 0.28250259160995483,
+      "prediction_mse_heldout": 0.2818349599838257,
+      "ridge_prediction_mse": 0.002488465922657093,
+      "ridge_rel_frobenius_anc": 0.02894864108706621,
+      "ridge_rel_frobenius_cur": 0.23652000605594986,
+      "seed": 0,
+      "state_cov_condition_number": 13.88259619246096,
+      "stubbornness_corr": 0.23162326038059347,
+      "stubbornness_diag_mae": 0.4773874212430872
+    }
+  ],
+  "prediction_mse_heldout": 0.2818349599838257,
+  "primary_metric": "rel_frobenius (attention current block vs \u039bW)",
+  "primary_value": 0.6116458231214954,
+  "ridge_rel_frobenius_cur": 0.23652000605594986,
+  "state_cov_condition_number": 13.88259619246096,
+  "stubbornness_corr": 0.23162326038059347,
+  "stubbornness_diag_mae": 0.4773874212430872
+}

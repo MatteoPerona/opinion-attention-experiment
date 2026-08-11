@@ -75,10 +75,12 @@ class FJAnchorAttentionHead(nn.Module):
         self.id_embed = nn.Embedding(2 * N, d)
         self.W_Q = nn.Linear(d, d, bias=False)
         self.W_K = nn.Linear(d, d, bias=False)
-        # Only current-opinion agents produce outputs (queries from first N)
-        nn.init.normal_(self.id_embed.weight, std=0.02)
-        nn.init.xavier_uniform_(self.W_Q.weight)
-        nn.init.xavier_uniform_(self.W_K.weight)
+        # Larger orthogonal-ish init: tiny Normal(0,0.02) makes 2N-way softmax
+        # nearly uniform and slows recovery of the diagonal-anchor + dense-W pattern.
+        nn.init.orthogonal_(self.id_embed.weight)
+        self.id_embed.weight.data *= 0.5
+        nn.init.eye_(self.W_Q.weight)
+        nn.init.eye_(self.W_K.weight)
 
     def attention_matrix(self) -> torch.Tensor:
         """

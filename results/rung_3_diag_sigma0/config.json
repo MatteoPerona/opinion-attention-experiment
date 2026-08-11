@@ -1,0 +1,15 @@
+{
+  "M": 200,
+  "N": 50,
+  "T": 12,
+  "change_vs_rung_2": "FJ stubbornness + 2N anchor tokens",
+  "d": 50,
+  "degroot": false,
+  "epochs": 1000,
+  "kind": "dense",
+  "rung": 3,
+  "seeds": [
+    0
+  ],
+  "sigma": 0.0
+}

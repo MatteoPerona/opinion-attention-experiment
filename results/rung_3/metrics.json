@@ -1,0 +1,53 @@
+{
+  "per_seed": [
+    {
+      "attn_rel_frobenius_vs_LambdaW": 0.40728898030623945,
+      "attn_rel_frobenius_vs_W_rescaled": 0.5198035164843634,
+      "attn_spearman_vs_LambdaW": 0.764527462100394,
+      "final_train_loss": 0.0025581624545156956,
+      "prediction_mse_heldout": 0.0025722498539835215,
+      "ridge_prediction_mse": 0.002488465922657093,
+      "ridge_rel_frobenius_anc": 0.02894864108706621,
+      "ridge_rel_frobenius_cur": 0.23652000605594986,
+      "seed": 0,
+      "state_cov_condition_number": 13.88259619246096,
+      "stubbornness_corr": 0.9995280223447884,
+      "stubbornness_diag_mae": 0.00645763632479317
+    },
+    {
+      "attn_rel_frobenius_vs_LambdaW": 0.3701867205246011,
+      "attn_rel_frobenius_vs_W_rescaled": 0.4695070737301109,
+      "attn_spearman_vs_LambdaW": 0.8098058639689384,
+      "final_train_loss": 0.002550127978126208,
+      "prediction_mse_heldout": 0.002580417552962899,
+      "ridge_prediction_mse": 0.002479824777875343,
+      "ridge_rel_frobenius_anc": 0.029686146371077166,
+      "ridge_rel_frobenius_cur": 0.22244233262936738,
+      "seed": 1,
+      "state_cov_condition_number": 14.104839601149598,
+      "stubbornness_corr": 0.9994730452028856,
+      "stubbornness_diag_mae": 0.005711550869888948
+    },
+    {
+      "attn_rel_frobenius_vs_LambdaW": 0.4213187893005218,
+      "attn_rel_frobenius_vs_W_rescaled": 0.5000167446334672,
+      "attn_spearman_vs_LambdaW": 0.7469830852772938,
+      "final_train_loss": 0.0025729260376344126,
+      "prediction_mse_heldout": 0.0025690130423754454,
+      "ridge_prediction_mse": 0.0024858046229389095,
+      "ridge_rel_frobenius_anc": 0.02674398149122048,
+      "ridge_rel_frobenius_cur": 0.21444463409442768,
+      "seed": 2,
+      "state_cov_condition_number": 11.633096445689029,
+      "stubbornness_corr": 0.999337215930515,
+      "stubbornness_diag_mae": 0.005423186150518169
+    }
+  ],
+  "prediction_mse_heldout": 0.0025722498539835215,
+  "primary_metric": "rel_frobenius (attention current block vs \u039bW)",
+  "primary_value": 0.40728898030623945,
+  "ridge_rel_frobenius_cur": 0.23652000605594986,
+  "state_cov_condition_number": 13.88259619246096,
+  "stubbornness_corr": 0.9995280223447884,
+  "stubbornness_diag_mae": 0.00645763632479317
+}

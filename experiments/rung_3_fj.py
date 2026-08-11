@@ -52,6 +52,7 @@ def run_one_seed(seed: int, args, out: Path) -> dict:
         epochs=args.epochs,
         batch_size=args.batch_size,
         lr=args.lr,
+        optimizer=args.optimizer,
     )
     with torch.no_grad():
         A_full = model.attention_matrix().cpu().numpy()
@@ -131,6 +132,7 @@ def main():
     p.add_argument("--epochs", type=int, default=500)
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--lr", type=float, default=1e-2)
+    p.add_argument("--optimizer", type=str, default="adam", choices=["adam", "lbfgs"])
     p.add_argument("--ridge-alpha", type=float, default=1e-3)
     p.add_argument("--out", type=str, default="results/rung_3")
     args = p.parse_args()
