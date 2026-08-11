@@ -1,0 +1,12 @@
+{
+  "M": 200,
+  "N": 50,
+  "T": 12,
+  "adaptive_note": "",
+  "degroot": true,
+  "kind": "dense",
+  "ridge_alpha": 0.001,
+  "rung": 0,
+  "seed": 0,
+  "sigma": 0.0
+}

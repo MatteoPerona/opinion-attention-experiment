@@ -1,0 +1,12 @@
+{
+  "n_train_pairs": 1920,
+  "n_val_pairs": 480,
+  "prediction_mse_heldout": 8.231600717755699e-14,
+  "primary_metric": "rel_frobenius (ridge vs true W)",
+  "primary_value": 5.92310342885231e-06,
+  "ridge_pred_mse_train": 3.823212228157907e-14,
+  "ridge_rel_frobenius_raw": 5.92310342885231e-06,
+  "ridge_rel_frobenius_stoch": 5.720988888105011e-06,
+  "ridge_spearman_raw": 0.9999999923199988,
+  "state_cov_condition_number": 68.52416133676275
+}
