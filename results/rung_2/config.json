@@ -3,16 +3,27 @@
   "N": 50,
   "T": 12,
   "batch_size": 256,
-  "change_vs_rung_1": "process noise sigma=0.05",
   "d": 50,
+  "decision_rule": "confirmed iff mean_attn_rel_F <= mean_projected_ridge_rel_F",
   "degroot": true,
   "epochs": 800,
   "kind": "dense",
   "lr": 0.005,
   "ridge_alpha": 0.001,
+  "run": 2,
+  "run1_seed0_archived": {
+    "attn_rel_frobenius": 0.189623,
+    "note": "run #1 seed 0 only; raw ridge (no simplex projection)",
+    "prediction_mse_heldout": 0.002580179,
+    "ridge_prediction_mse_heldout": 0.002590654,
+    "ridge_rel_frobenius_raw": 0.200684,
+    "state_cov_condition_number": 61.3502
+  },
   "rung": 2,
   "seeds": [
-    0
+    0,
+    1,
+    2
   ],
   "sigma": 0.05
 }
