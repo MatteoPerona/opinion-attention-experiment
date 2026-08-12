@@ -1,0 +1,25 @@
+{
+  "M": 2000,
+  "curriculum": {
+    "k1": 300,
+    "k2": 200,
+    "k4": 200
+  },
+  "grad_clip": 1.0,
+  "lr": 0.005,
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "sigma": 0.05,
+  "success_criterion": {
+    "interesting_threshold_ridge": 0.23,
+    "must_improve_by_more_than": 0.05,
+    "one_step_baseline_rel_f": 0.4,
+    "rule": "Success if mean unrolled attn rel-F(A_cur vs \u039bW) improves on one-step \u22480.40 by a margin larger than seed spread \u22480.05 (i.e. mean < 0.35); interesting if approaching ridge \u22480.23. Stubbornness corr must stay >0.99.",
+    "seed_spread": 0.05,
+    "stubbornness_corr_floor": 0.99
+  },
+  "task": 4
+}

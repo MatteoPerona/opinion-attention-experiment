@@ -171,6 +171,71 @@ def eval_mse_degroot(model: nn.Module, X: np.ndarray, Y: np.ndarray, device: str
     return float(torch.mean((pred - Yt) ** 2).item())
 
 
+def train_fj_unrolled(
+    model: nn.Module,
+    trajectories: np.ndarray,
+    x0s: np.ndarray,
+    k: int,
+    epochs: int,
+    batch_size: int,
+    lr: float,
+    device: str = "cpu",
+    grad_clip: float = 1.0,
+) -> list[float]:
+    """
+    k-step unrolled FJ training (§4 graduation path).
+
+    Feed true x(t), roll the model k steps with its own predictions as current
+    opinions; anchors stay fixed at true x(0). Loss = mean MSE over steps 1..k
+    against stored true states. Only starts with t+k <= T are used.
+    """
+    model = model.to(device)
+    # trajectories: (M, T+1, N)
+    M, Tp1, N = trajectories.shape
+    T = Tp1 - 1
+    if k > T:
+        raise ValueError(f"k={k} exceeds T={T}")
+    # usable starts: t = 0..T-k  → for each traj, (T-k+1) starts
+    starts = []
+    for m in range(M):
+        for t in range(T - k + 1):
+            starts.append((m, t))
+    starts = np.array(starts)
+    P = len(starts)
+
+    traj_t = torch.tensor(trajectories, dtype=torch.float32, device=device)
+    x0_t = torch.tensor(x0s, dtype=torch.float32, device=device)
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    losses = []
+
+    for ep in range(epochs):
+        perm = np.random.permutation(P)
+        ep_loss = 0.0
+        n_batches = 0
+        for start in range(0, P, batch_size):
+            idx = starts[perm[start : start + batch_size]]
+            m_idx = torch.tensor(idx[:, 0], device=device)
+            t_idx = torch.tensor(idx[:, 1], device=device)
+            x = traj_t[m_idx, t_idx]  # (B, N) true x(t)
+            x0b = x0_t[m_idx]
+            step_losses = []
+            x_cur = x
+            for s in range(1, k + 1):
+                x_cur = model(x_cur, x0b)
+                target = traj_t[m_idx, t_idx + s]
+                step_losses.append(torch.mean((x_cur - target) ** 2))
+            loss = torch.stack(step_losses).mean()
+            opt.zero_grad()
+            loss.backward()
+            if grad_clip is not None and grad_clip > 0:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+            opt.step()
+            ep_loss += float(loss.item())
+            n_batches += 1
+        losses.append(ep_loss / max(n_batches, 1))
+    return losses
+
+
 @torch.no_grad()
 def eval_mse_fj(
     model: nn.Module, X: np.ndarray, Y: np.ndarray, x0: np.ndarray, device: str = "cpu"

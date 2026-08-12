@@ -1,0 +1,78 @@
+{
+  "interesting_near_ridge": false,
+  "mean_attn_rel_frobenius": 0.40942406682840504,
+  "one_step_ref": {
+    "attn_rel_f_seed0": 0.407289,
+    "attn_rel_f_seeds": [
+      0.407,
+      0.37,
+      0.421
+    ],
+    "ridge_rel_f_seed0": 0.23652,
+    "stub_corr_seed0": 0.999528
+  },
+  "per_seed": [
+    {
+      "attn_rel_frobenius_vs_LambdaW": 0.42365120396775546,
+      "attn_spearman_vs_LambdaW": 0.7050971565275451,
+      "prediction_mse_heldout": 0.0025362323503941298,
+      "ridge_prediction_mse": 0.002488465922657093,
+      "ridge_rel_frobenius_cur": 0.23652000605594986,
+      "ridge_rel_frobenius_cur_simplex": 0.2189851622042468,
+      "seed": 0,
+      "state_cov_condition_number": 13.88259619246096,
+      "state_cov_condition_number_joint": 1261.8074499234551,
+      "stubbornness_corr": 0.9997896476432341,
+      "stubbornness_diag_mae": 0.0050537704031536415,
+      "unstable": false,
+      "unstable_note": ""
+    },
+    {
+      "attn_rel_frobenius_vs_LambdaW": 0.39110404888598993,
+      "attn_spearman_vs_LambdaW": 0.7545458978962165,
+      "prediction_mse_heldout": 0.0025458454620093107,
+      "ridge_prediction_mse": 0.002479824777875343,
+      "ridge_rel_frobenius_cur": 0.22244233262936738,
+      "ridge_rel_frobenius_cur_simplex": 0.20620104843534234,
+      "seed": 1,
+      "state_cov_condition_number": 14.104839601149598,
+      "state_cov_condition_number_joint": 1128.4111838540523,
+      "stubbornness_corr": 0.9997740444529112,
+      "stubbornness_diag_mae": 0.003871611284700589,
+      "unstable": false,
+      "unstable_note": ""
+    },
+    {
+      "attn_rel_frobenius_vs_LambdaW": 0.41351694763146973,
+      "attn_spearman_vs_LambdaW": 0.7310576588572255,
+      "prediction_mse_heldout": 0.0025397944264113903,
+      "ridge_prediction_mse": 0.0024858046229389095,
+      "ridge_rel_frobenius_cur": 0.21444463409442768,
+      "ridge_rel_frobenius_cur_simplex": 0.19837229103815024,
+      "seed": 2,
+      "state_cov_condition_number": 11.633096445689029,
+      "state_cov_condition_number_joint": 1156.6700830492744,
+      "stubbornness_corr": 0.9998004414488021,
+      "stubbornness_diag_mae": 0.0032438786829000234,
+      "unstable": false,
+      "unstable_note": ""
+    }
+  ],
+  "per_seed_attn_rel_frobenius": [
+    0.42365120396775546,
+    0.39110404888598993,
+    0.41351694763146973
+  ],
+  "primary_metric": "rel_frobenius (unrolled attention A_cur vs \u039bW)",
+  "stubbornness_ok": true,
+  "success": false,
+  "success_criterion": {
+    "interesting_threshold_ridge": 0.23,
+    "must_improve_by_more_than": 0.05,
+    "one_step_baseline_rel_f": 0.4,
+    "rule": "Success if mean unrolled attn rel-F(A_cur vs \u039bW) improves on one-step \u22480.40 by a margin larger than seed spread \u22480.05 (i.e. mean < 0.35); interesting if approaching ridge \u22480.23. Stubbornness corr must stay >0.99.",
+    "seed_spread": 0.05,
+    "stubbornness_corr_floor": 0.99
+  },
+  "verdict": "NO SUCCESS on criterion: mean unrolled rel-F=0.4094 did not beat one-step 0.40 by >0.05. Stubbornness preserved (corr>0.99)."
+}
