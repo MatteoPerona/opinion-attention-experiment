@@ -88,3 +88,32 @@ def row_softmax_normalize(A: np.ndarray) -> np.ndarray:
     s = A.sum(axis=1, keepdims=True)
     s = np.where(s <= 0, 1.0, s)
     return A / s
+
+
+def project_simplex(v: np.ndarray) -> np.ndarray:
+    """
+    Euclidean projection of vector v onto the probability simplex
+    {x | x >= 0, sum(x) = 1}.
+
+    Algorithm: Duchi et al. (2008) / Michelot (1986).
+    """
+    v = np.asarray(v, dtype=float).ravel()
+    n = v.size
+    u = np.sort(v)[::-1]
+    cssv = np.cumsum(u)
+    rho = np.nonzero(u * np.arange(1, n + 1) > (cssv - 1))[0][-1]
+    theta = (cssv[rho] - 1.0) / (rho + 1.0)
+    w = np.maximum(v - theta, 0.0)
+    return w
+
+
+def project_rows_simplex(A: np.ndarray) -> np.ndarray:
+    """
+    Row-wise Euclidean projection onto the probability simplex.
+    For DeGroot W (N×N) or FJ Op (N×2N): each full row is projected.
+    """
+    A = np.asarray(A, dtype=float)
+    out = np.empty_like(A)
+    for i in range(A.shape[0]):
+        out[i] = project_simplex(A[i])
+    return out

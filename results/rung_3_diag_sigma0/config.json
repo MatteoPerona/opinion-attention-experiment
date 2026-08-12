@@ -1,15 +1,19 @@
 {
-  "M": 200,
+  "diagnostic": "rung_3_diag_sigma0",
+  "description": "Noiseless FJ with Adam and poor (Normal/Xavier) init — architecture/opt failure even when ridge is near-perfect",
   "N": 50,
+  "M": 200,
   "T": 12,
-  "change_vs_rung_2": "FJ stubbornness + 2N anchor tokens",
   "d": 50,
-  "degroot": false,
-  "epochs": 1000,
+  "sigma": 0.0,
   "kind": "dense",
-  "rung": 3,
-  "seeds": [
-    0
-  ],
-  "sigma": 0.0
+  "degroot": false,
+  "seeds": [0],
+  "epochs": 1000,
+  "lr": 0.005,
+  "optimizer": "adam",
+  "init": "normal_std_0.02_xavier_WQ_WK",
+  "batch_size": 256,
+  "ridge_alpha": 0.001,
+  "note": "From run #1 diagnostics table in results/rung_3/REPORT.md item 2"
 }

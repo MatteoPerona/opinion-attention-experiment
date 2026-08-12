@@ -1,12 +1,15 @@
-# Rung 3 Report — FJ + anchor tokens + noise
+# Diagnostic: rung_3_diag_lbfgs_s0 — noiseless FJ, LBFGS + orthogonal init
 
-## Setup
-- Exactly one change vs rung 2: **stubbornness on** (Λ≠I) with **2N anchor-token** design
-- σ=0.0 retained; dense W; N=50, M=200, T=12, d=50
-- Seeds=[0]
+## Setup (actual run)
+- **Diagnostic only**: same noiseless data regime as `rung_3_diag_sigma0`, better optimizer/init
+- Dense FJ, N=50, M=200, T=12, d=50, **σ=0.0**
+- Optimizer: **LBFGS** (lr=1.0, 50 outer steps, strong Wolfe)
+- Init: **orthogonal** ID embeddings (×0.5) + identity W_Q/W_K
+- Seed=[0]
+- Value path: raw scalars; 2N anchor tokens; free attention
 
 ## Primary metric (§5 — dense: relative Frobenius on current block vs ΛW)
-- **Attention** \(\|A_{cur} - \Lambda W\|_F / \|\Lambda W\|_F\) = **0.528092**
+- **Attention** ||A_cur − ΛW||_F / ||ΛW||_F = **0.528092**
 - Spearman = 0.553552
 - Rescaled-to-W rel-Frobenius = 0.571965
 
@@ -29,5 +32,4 @@
 `heatmap_A_vs_W.png` (current block vs ΛW); per-seed also has anchor heatmap.
 
 ## Failure / gap diagnosis
-Attention current-block recovery worse than N×2N ridge operator. Possible causes: (1) optimization — 2N-way softmax harder; (2) architecture — Q/K from IDs must jointly represent ΛW and diagonal anchors; (3) capacity OK if d≥N. Consider `--extra-seeds 0,1,2`.
-
+Orthogonal init + LBFGS recovers **anchors** almost perfectly (stub corr ≈ 0.9999) and cuts ΛW rel-F from ~3.3 → ~0.53, but the current block still lags ridge (8e-4) by orders of magnitude. Anchors easy; dense ΛW under joint 2N-softmax still hard — item 3 in `results/rung_3/REPORT.md` diagnostics table.

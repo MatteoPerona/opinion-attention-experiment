@@ -1,12 +1,15 @@
-# Rung 3 Report — FJ + anchor tokens + noise
+# Diagnostic: rung_3_diag_sigma0 — noiseless FJ, Adam, poor init
 
-## Setup
-- Exactly one change vs rung 2: **stubbornness on** (Λ≠I) with **2N anchor-token** design
-- σ=0.0 retained; dense W; N=50, M=200, T=12, d=50
-- Seeds=[0]
+## Setup (actual run)
+- **Diagnostic only** (not a ladder rung): isolate whether attention can recover ΛW when data is perfectly identifiable
+- Dense FJ, N=50, M=200, T=12, d=50, **σ=0.0** (noiseless)
+- Optimizer: **Adam** (lr=5e-3, 1000 epochs, batch=256)
+- Init: **poor** — Normal(0, 0.02) ID embeddings + Xavier W_Q/W_K (pre-orthogonal-init era)
+- Seed=[0]
+- Value path: raw scalars; 2N anchor tokens; free attention
 
 ## Primary metric (§5 — dense: relative Frobenius on current block vs ΛW)
-- **Attention** \(\|A_{cur} - \Lambda W\|_F / \|\Lambda W\|_F\) = **3.326411**
+- **Attention** ||A_cur − ΛW||_F / ||ΛW||_F = **3.326411**
 - Spearman = 0.580722
 - Rescaled-to-W rel-Frobenius = 1.958964
 
@@ -29,5 +32,4 @@
 `heatmap_A_vs_W.png` (current block vs ΛW); per-seed also has anchor heatmap.
 
 ## Failure / gap diagnosis
-Attention current-block recovery worse than N×2N ridge operator. Possible causes: (1) optimization — 2N-way softmax harder; (2) architecture — Q/K from IDs must jointly represent ΛW and diagonal anchors; (3) capacity OK if d≥N. Consider `--extra-seeds 0,1,2`.
-
+Ridge recovers ΛW essentially perfectly under noiseless FJ (rel-F ≈ 8e-4), but Adam+poor-init attention fails badly (rel-F ≈ 3.33). This is an **architecture/optimization** failure, not a data failure — item 2 in `results/rung_3/REPORT.md` diagnostics table.

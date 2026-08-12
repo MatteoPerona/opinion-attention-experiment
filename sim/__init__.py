@@ -220,6 +220,23 @@ def state_covariance_condition_number(pairs_X: np.ndarray) -> float:
     return float(eig.max() / eig.min())
 
 
+def joint_feature_covariance_condition_number(
+    pairs_X: np.ndarray,
+    pairs_x0: np.ndarray,
+) -> float:
+    """
+    κ_Z = κ(cov([x(t); x(0)])) — joint condition number of the N×2N
+    FJ regression features. This is what governs ridge recovery of the
+    full operator; the marginal κ(cov(x(t))) can look fine while κ_Z is huge.
+    """
+    Z = np.concatenate([pairs_X, pairs_x0], axis=1)
+    Zc = Z - Z.mean(axis=0, keepdims=True)
+    cov = (Zc.T @ Zc) / max(Zc.shape[0] - 1, 1)
+    eig = np.linalg.eigvalsh(cov)
+    eig = np.clip(eig, 1e-15, None)
+    return float(eig.max() / eig.min())
+
+
 def train_val_split(
     dataset: dict,
     val_fraction: float,

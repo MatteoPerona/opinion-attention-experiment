@@ -15,12 +15,15 @@ from baselines import (
     relative_frobenius,
     ridge_fit_FJ_operator,
     ridge_fit_W,
+    project_rows_simplex,
     row_softmax_normalize,
     spearman_corr_entries,
     topk_edge_precision,
 )
-from sim import state_covariance_condition_number
-
+from sim import (
+    joint_feature_covariance_condition_number,
+    state_covariance_condition_number,
+)
 
 def set_seed(seed: int) -> np.random.Generator:
     np.random.seed(seed)
@@ -182,16 +185,21 @@ def eval_mse_fj(
 
 def ridge_degroot_bundle(X: np.ndarray, Y: np.ndarray, W: np.ndarray, alpha: float = 1e-3) -> dict:
     W_hat = ridge_fit_W(X, Y, alpha=alpha)
-    W_hat_stoch = row_softmax_normalize(W_hat)
+    W_hat_relu = row_softmax_normalize(W_hat)
+    W_hat_simplex = project_rows_simplex(W_hat)
     return {
         "W_hat": W_hat,
-        "W_hat_stoch": W_hat_stoch,
+        "W_hat_stoch": W_hat_relu,
+        "W_hat_simplex": W_hat_simplex,
         "rel_frobenius_raw": relative_frobenius(W_hat, W),
-        "rel_frobenius_stoch": relative_frobenius(W_hat_stoch, W),
+        "rel_frobenius_stoch": relative_frobenius(W_hat_relu, W),
+        "rel_frobenius_simplex": relative_frobenius(W_hat_simplex, W),
         "spearman_raw": spearman_corr_entries(W_hat, W),
-        "spearman_stoch": spearman_corr_entries(W_hat_stoch, W),
-        "topk_precision_stoch": topk_edge_precision(W_hat_stoch, W),
+        "spearman_stoch": spearman_corr_entries(W_hat_relu, W),
+        "spearman_simplex": spearman_corr_entries(W_hat_simplex, W),
+        "topk_precision_stoch": topk_edge_precision(W_hat_relu, W),
         "pred_mse": float(np.mean((X @ W_hat.T - Y) ** 2)),
+        "pred_mse_simplex": float(np.mean((X @ W_hat_simplex.T - Y) ** 2)),
     }
 
 
@@ -207,21 +215,34 @@ def ridge_fj_bundle(
     N = world_W.shape[0]
     W_cur = Op[:, :N]
     W_anc = Op[:, N:]
+    Op_simplex = project_rows_simplex(Op)
+    W_cur_s = Op_simplex[:, :N]
+    W_anc_s = Op_simplex[:, N:]
     target_cur = np.diag(world_lam) @ world_W
     target_anc = np.diag(1.0 - world_lam)
     Z = np.concatenate([X, x0], axis=1)
     pred = Z @ Op.T
+    pred_s = Z @ Op_simplex.T
     return {
         "Op": Op,
+        "Op_simplex": Op_simplex,
         "W_cur": W_cur,
         "W_anc": W_anc,
         "rel_frobenius_cur": relative_frobenius(W_cur, target_cur),
         "rel_frobenius_anc": relative_frobenius(W_anc, target_anc),
+        "rel_frobenius_cur_simplex": relative_frobenius(W_cur_s, target_cur),
+        "rel_frobenius_anc_simplex": relative_frobenius(W_anc_s, target_anc),
         "spearman_cur": spearman_corr_entries(W_cur, target_cur),
+        "spearman_cur_simplex": spearman_corr_entries(W_cur_s, target_cur),
         "anchor_diag_mae": float(np.mean(np.abs(np.diag(W_anc) - (1.0 - world_lam)))),
         "pred_mse": float(np.mean((pred - Y) ** 2)),
+        "pred_mse_simplex": float(np.mean((pred_s - Y) ** 2)),
     }
 
 
 def condition_number_report(pairs_X: np.ndarray) -> float:
     return state_covariance_condition_number(pairs_X)
+
+
+def joint_condition_number_report(pairs_X: np.ndarray, pairs_x0: np.ndarray) -> float:
+    return joint_feature_covariance_condition_number(pairs_X, pairs_x0)
