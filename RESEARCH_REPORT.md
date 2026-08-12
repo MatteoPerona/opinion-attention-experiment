@@ -95,36 +95,87 @@ Rung 3’s prize-metric gap means 0–4 did not all succeed cleanly. Multi-head 
 
 ---
 
-## Limitations and open questions
+## Run #2 — corrections, σ-sweep, unrolling, factored diagnostic
 
-1. **Softmax factorization of [ΛW | I−Λ].** Can a single ID-keyed head reach ridge-level A_cur recovery under FJ, or is an architectural variant required that still preserves raw V (e.g. factored current/anchor logits, not a learned value path)?
+Bookkeeping fixes + tests of the flat-landscape hypothesis. Primary metrics and success criteria fixed before seeing results. All run-#1 hard constraints retained except Task 5 (labeled ablation).
 
-2. **Identifiability when x≈x0.** Teacher-forced one-step MSE under strong anchoring may under-penalize wrong current/anchor splits. Would unroll-to-steady-state training (§4 graduation path) sharpen the map?
+### Summary table
 
-3. **M and σ schedule.** Dense FJ+noise needed M=2000 for usable ridge; DeGroot was fine at M=200. Adaptive M should be treated as part of the protocol, not an afterthought.
+| Task | Setting | Primary | Attention | Raw ridge | Proj ridge | Notes |
+|------|---------|---------|-----------|-----------|------------|-------|
+| **1** | Hygiene | — | — | — | — | Diag configs fixed; Euclidean simplex proj + κ_Z helpers + tests |
+| **2** | Rung 2 redo, 3 seeds, σ=0.05 | rel-F vs W | **0.1877** (mean) | 0.1961 | **0.1901** | Claim vs *projected* ridge **CONFIRMED** |
+| **3** | FJ σ-sweep, M=2000 (seed0 @ σ=0.05) | rel-F A_cur vs ΛW | 0.407 | 0.237 | 0.219 | See sweep plot; κ_Z logged |
+| **4** | Unrolled k=1→2→4, σ=0.05 | rel-F A_cur vs ΛW | **0.409** (mean) | ~0.22–0.24 | ~0.20–0.22 | **NO SUCCESS** vs one-step 0.40 |
+| **5** | Factored-logit **diag** (not headline) | rel-F A_cur vs ΛW | **0.094** | 0.237 | 0.219 | Joint 2N-softmax was the bottleneck |
 
-4. **Clustered collinearity ceiling.** Even ridge Spearman tops out near ~0.63 on our clustered graphs — entrywise recovery has a data limit; top-k is the honest prize for rung 4+.
+Task 2 per-seed (rel-F): attn [0.190, 0.189, 0.184]; raw ridge [0.201, 0.196, 0.192]; proj ridge [0.195, 0.190, 0.186].
 
-5. **Small-d on clustered W.** Left open per §7; not swept here.
+### σ-sweep plot
 
-6. **Many-worlds / real data (rungs 6–7).** Explicitly deferred. Fixed ID embeddings cannot span worlds; amortized inference is a different experiment.
+![sigma sweep](results/rung_3_sigma_sweep/recovery_and_kappa_vs_sigma.png)
 
-7. **Reproducibility notes.** Seeds logged in each `config.json`. Rung 3 diagnostics live in `results/rung_3_diag_*`. Generator tests: `pytest tests/test_generator.py`.
+Seed-0 table (rel-F A_cur vs ΛW / κ_Z):
 
----
+| σ | attn | raw ridge | proj ridge | κ_Z | attn−ridge gap |
+|---|------|-----------|------------|-----|----------------|
+| 0 | 0.300 | 0.000 | 0.000 | 4037 | +0.300 |
+| 0.02 | 0.373 | 0.112 | 0.107 | 2932 | +0.262 |
+| 0.05 | 0.407 | 0.237 | 0.219 | 1262 | +0.171 |
+| 0.1 | 0.425 | 0.363 | 0.324 | 419 | +0.061 |
+| 0.2 | 0.432 | 0.475 | 0.407 | 116 | **−0.044** |
+| 0.35 | 0.434 | 0.532 | 0.445 | 40 | −0.097 |
+| 0.5 | 0.441 | 0.552 | 0.459 | 21 | −0.111 |
 
-## Reproduce
+### Verdicts on σ-sweep hypotheses (pre-registered)
+
+1. **κ_Z falls as σ rises — SUPPORTED.** Spearman(σ, κ_Z)=−1.0 (4037→21). Marginal κ alone (~14 in run #1) hid the N×2N pathology.
+2. **Ridge ΛW recovery non-monotone with interior optimum — NOT SUPPORTED.** Best at σ=0; degrades monotonically at M=2000. “Some noise helps” (§1b) does not appear for this well-excited FJ operator fit — noise is mostly target corruption here. Negative result retained.
+3. **Attention−ridge gap narrows as σ rises — SUPPORTED.** Spearman(σ, gap)=−1.0; gap turns negative by σ=0.2. Absolute attention recovery still plateaus ~0.43–0.44; gap closes mainly because ridge worsens faster. Consistent with re-excitation of flat current-vs-anchor directions and/or softmax regularization under noise.
+
+### Unrolled-training success criterion
+
+**Criterion (pre-registered):** mean unrolled rel-F improves on one-step ≈0.40 by > seed spread ≈0.05 (i.e. mean < 0.35); interesting if ≈ ridge 0.23; stub corr > 0.99.
+
+**Result: NO SUCCESS.** Mean unrolled rel-F = **0.409** (seeds 0.424 / 0.391 / 0.414) — indistinguishable from one-step. Training stable (no NaN/explosion with curriculum + grad clip). Stubbornness corr stays ≈0.9998. Unrolling alone does not cure the joint-softmax / flat-landscape gap.
+
+### Factored-logit diagnostic (Task 5 — ablation, not headline)
+
+Factored gates + N-token softmax: rel-F(A_cur vs ΛW) = **0.094**, Spearman 0.987, gate↔(1−λ) corr ≈ 1.000 — **beats ridge (0.237)**. Interprets the run-#1/Task-4 failure: the gap was largely the *joint* 2N-way softmax coupling currents and anchors, not the bilinear ID map itself. Remains outside the locked run-#1 architecture; do not promote to headline without a new protocol decision.
+
+### Updated limitations and open questions
+
+1. **Joint 2N-softmax is the FJ bottleneck (sharpened).** Task 5 shows a factored gate recovers ΛW better than ridge under the same data/constraints on V. Open: is a factored (or similarly structured) head an acceptable “single attention head” for the research claim, or a different operator class?
+2. **Unrolling does not fix joint softmax (§4 graduation path tested).** Task 4 negative: multi-step self-rollout preserves prediction and stubbornness but not A_cur quality.
+3. **Noise helps the attention−ridge *gap*, not absolute recovery.** Absolute attn rel-F worsens mildly with σ; ridge worsens faster. Interior optimum for ridge recovery not observed at M=2000 dense FJ.
+4. **Always log κ_Z for FJ.** Marginal κ is misleading; joint [x(t); x(0)] conditioning is the right diagnostic.
+5. **Fair ridge comparisons need simplex projection.** Task 2 confirmed attention still matches/beats projected ridge under DeGroot noise; raw-only comparisons overstate attention’s edge.
+6. **Clustered / many-worlds / real data** — unchanged deferrals from run #1; rungs 5–7 not attempted.
+
+### Reproduce (Run #2)
+
+```bash
+PYTHONPATH=. pytest -q tests/
+PYTHONPATH=. python experiments/rung_2_noise.py --extra-seeds 0,1,2
+PYTHONPATH=. python experiments/rung_3_sigma_sweep.py
+PYTHONPATH=. python experiments/rung_3_unrolled.py --extra-seeds 0,1,2
+PYTHONPATH=. python experiments/rung_3_factored_diag.py  # diagnostic only
+```
+
+Artifacts: `results/rung_2/`, `results/rung_3_sigma_sweep/`, `results/rung_3_unrolled/`, `results/rung_3_factored_diag/`.
+
+### Run #1 reproduce (unchanged)
 
 ```bash
 pip install -r requirements.txt
 PYTHONPATH=. pytest -q tests/
 PYTHONPATH=. python experiments/rung_0_ridge.py
 PYTHONPATH=. python experiments/rung_1_degroot.py --extra-seeds 0,1,2 --epochs 800 --lr 5e-3
-PYTHONPATH=. python experiments/rung_2_noise.py --epochs 800 --lr 5e-3 --sigma 0.05
+PYTHONPATH=. python experiments/rung_2_noise.py --extra-seeds 0,1,2
 PYTHONPATH=. python experiments/rung_3_fj.py --M 2000 --epochs 800 --lr 5e-3 --sigma 0.05 --extra-seeds 0,1,2
 PYTHONPATH=. python experiments/rung_4_clustered.py --M 2000 --epochs 800 --lr 5e-3 --extra-seeds 0,1,2
 ```
 
 ---
 
-*Written for skeptical reproduction. Negative and partial results are first-class outcomes.*
+*Run #2 written for skeptical reproduction. Hypothesis (ii) and Task 4 are explicit negatives.*
