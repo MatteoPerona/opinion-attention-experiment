@@ -1,0 +1,12 @@
+{
+  "M": 2000,
+  "N": 50,
+  "T": 12,
+  "d": 50,
+  "diagnostic": true,
+  "epochs": 800,
+  "outside_run1_constraints": true,
+  "seed": 0,
+  "sigma": 0.05,
+  "task": 5
+}

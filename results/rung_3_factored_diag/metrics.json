@@ -1,0 +1,22 @@
+{
+  "attn_rel_frobenius_vs_LambdaW": 0.09427630385577676,
+  "attn_rel_frobenius_vs_W_rescaled": 0.11460509371993763,
+  "attn_spearman_vs_LambdaW": 0.9872155013144803,
+  "final_train_loss": 0.0025187746807932856,
+  "interpretation": "Factored variant recovers \u039bW near ridge \u2192 rung-3 gap was largely caused by the *joint* 2N-way softmax coupling current and anchor tokens.",
+  "joint_softmax_ref": {
+    "attn_rel_f": 0.407289,
+    "ridge_rel_f": 0.23652,
+    "stub_corr": 0.999528
+  },
+  "label": "ARCHITECTURE ABLATION \u2014 not a headline result",
+  "near_ridge": true,
+  "prediction_mse_heldout": 0.002516044769436121,
+  "ridge_prediction_mse": 0.002488465922657093,
+  "ridge_rel_frobenius_cur": 0.23652000605594986,
+  "ridge_rel_frobenius_cur_simplex": 0.2189851622042468,
+  "state_cov_condition_number": 13.88259619246096,
+  "state_cov_condition_number_joint": 1261.8074499234551,
+  "stubbornness_gate_corr": 0.9999621785610837,
+  "stubbornness_gate_mae": 0.0014491618497754065
+}
