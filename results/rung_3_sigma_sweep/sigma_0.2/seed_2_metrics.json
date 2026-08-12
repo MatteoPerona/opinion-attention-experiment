@@ -1,0 +1,18 @@
+{
+  "attn_minus_proj_ridge_gap": 0.05157291291370947,
+  "attn_minus_ridge_gap": -0.010463583879419813,
+  "attn_rel_frobenius_vs_LambdaW": 0.4528315404352327,
+  "attn_spearman_vs_LambdaW": 0.7019573554491769,
+  "final_train_loss": 0.04020828753709793,
+  "prediction_mse_heldout": 0.04040324687957764,
+  "ridge_prediction_mse": 0.0397726553540727,
+  "ridge_rel_frobenius_cur": 0.46329512431465253,
+  "ridge_rel_frobenius_cur_simplex": 0.40125862752152325,
+  "ridge_spearman_cur": 0.7654496044559369,
+  "seed": 2,
+  "sigma": 0.2,
+  "state_cov_condition_number": 8.98284924211608,
+  "state_cov_condition_number_joint": 108.54038176836397,
+  "stubbornness_corr": 0.9973897480003079,
+  "stubbornness_diag_mae": 0.010968145572793903
+}

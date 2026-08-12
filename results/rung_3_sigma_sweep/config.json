@@ -1,0 +1,28 @@
+{
+  "M": 2000,
+  "N": 50,
+  "T": 12,
+  "d": 50,
+  "epochs": 800,
+  "hypotheses_pre_registered": {
+    "i": "\u03ba_Z falls as \u03c3 rises (noise decorrelates x(t) from x(0))",
+    "ii": "ridge \u039bW recovery is non-monotone in \u03c3 with an interior optimum (\u00a71b)",
+    "iii": "attention\u2212ridge gap narrows as \u03c3 rises (flat current-vs-anchor dirs re-excited)"
+  },
+  "lr": 0.005,
+  "multi_seed_sigmas": [
+    0.05,
+    0.2
+  ],
+  "setting": "rung-3 FJ + 2N anchors, vary only sigma",
+  "sigmas": [
+    0.0,
+    0.02,
+    0.05,
+    0.1,
+    0.2,
+    0.35,
+    0.5
+  ],
+  "task": 3
+}

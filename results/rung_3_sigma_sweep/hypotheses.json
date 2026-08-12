@@ -1,0 +1,53 @@
+{
+  "hypotheses_pre_registered": {
+    "i": "\u03ba_Z falls as \u03c3 rises (noise decorrelates x(t) from x(0))",
+    "ii": "ridge \u039bW recovery is non-monotone in \u03c3 with an interior optimum (\u00a71b)",
+    "iii": "attention\u2212ridge gap narrows as \u03c3 rises (flat current-vs-anchor dirs re-excited)"
+  },
+  "jobs": [
+    {
+      "seed": 0,
+      "sigma": 0.0
+    },
+    {
+      "seed": 0,
+      "sigma": 0.02
+    },
+    {
+      "seed": 0,
+      "sigma": 0.05
+    },
+    {
+      "seed": 1,
+      "sigma": 0.05
+    },
+    {
+      "seed": 2,
+      "sigma": 0.05
+    },
+    {
+      "seed": 0,
+      "sigma": 0.1
+    },
+    {
+      "seed": 0,
+      "sigma": 0.2
+    },
+    {
+      "seed": 1,
+      "sigma": 0.2
+    },
+    {
+      "seed": 2,
+      "sigma": 0.2
+    },
+    {
+      "seed": 0,
+      "sigma": 0.35
+    },
+    {
+      "seed": 0,
+      "sigma": 0.5
+    }
+  ]
+}
