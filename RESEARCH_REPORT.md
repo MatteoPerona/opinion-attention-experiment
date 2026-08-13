@@ -65,61 +65,85 @@ This section is for readers who have not lived inside the experiment design. Eve
 
 ---
 
-## 🗺️ Heatmaps (learned map vs ground truth)
+## 🗺️ Experiments — heatmaps with setup & interpretation
 
-Side-by-side: left = what the model (or ridge) learned; right = ground truth. Visually similar heatmaps ⇒ structure recovery.
+Each figure is a side-by-side heatmap: **left = learned map**, **right = ground truth**. Visually matching patterns mean the method recovered who influences whom (the prize), not merely that next-step prediction worked.
 
-### Rung 0 — ridge \(\hat W\) vs true \(W\)
+---
+
+### ⚪ Rung 0 — Ridge baseline (no neural net)
+
+**What we ran.** Before training any attention head, fit the influence matrix by ridge regression on consecutive opinion pairs \((x(t), x(t+1))\) from a dense DeGroot world (\(\Lambda = I\), no stubbornness, \(\sigma=0\)). Setup: \(N=50\) agents, \(M=200\) short trajectories (\(T=12\)) from varied random \(x(0)\), same fixed \(W\). This is the **data gate**: if unconstrained least squares cannot recover \(W\), no attention head can either.
+
 ![rung0](results/rung_0/heatmap_A_vs_W.png)
 
-### Rung 1 — attention \(A\) vs true \(W\) (DeGroot, noiseless)
+**How to read the figure.** Left is ridge \(\hat W\); right is true \(W\). They are visually indistinguishable — every row of influence weights lines up.
+
+**Interpretation.** Rel-Frobenius ≈ \(6\times10^{-6}\), Spearman ≈ 1.0, held-out MSE ≈ \(10^{-13}\), \(\kappa(\mathrm{cov}\,X)\approx 69\) (healthy). **Verdict: PASS.** The multi-trajectory design supplies enough excitation; the ladder may proceed. Any later attention failure is architecture/optimization, not missing information.
+
+---
+
+### 🟢 Rung 1 — DeGroot, dense \(W\), no noise, single attention head
+
+**What we ran.** Exactly the rung-0 world, but now train a **single** attention head: learnable per-agent identity embeddings drive Q/K; values are the **raw scalar opinions** (no \(W_V\), no output projection, no MLP); attention is fully free (never masked to the true graph); \(d=N=50\). Train one-step teacher-forced MSE for 800 epochs; report across seeds \(\{0,1,2\}\).
+
 ![rung1](results/rung_1/heatmap_A_vs_W.png)
 
-### Rung 2 — attention \(A\) vs true \(W\) (DeGroot + noise)
+**How to read the figure.** Left is the learned softmax attention map \(A\); right is true \(W\). The two panels share the same overall texture — bright/dark cells align — so the head recovered the influence structure, not a scrambled surrogate.
+
+**Interpretation.** Attention rel-Frobenius ≈ **0.025**, Spearman ≈ **0.999**, prediction MSE ≈ \(10^{-6}\). Ridge on the same data is essentially perfect (rel-F ≈ \(6\times10^{-6}\)). So structure recovery **succeeds** for the research question, but attention does not hit ridge’s numerical ceiling — a stable ~2–3% residual across seeds from softmax + bilinear ID parameterization (not data or capacity). **Verdict: solid pass** on interpretability; mild optimization gap vs unconstrained OLS, reported not patched.
+
+---
+
+### 🟡 Rung 2 — Same DeGroot setup + process noise
+
+**What we ran.** Change exactly one thing vs rung 1: inject Gaussian process noise \(\sigma=0.05\) into the FJ/DeGroot update while simulating. Architecture and training recipe unchanged. Run #2 re-ran this with **3 seeds** and compared attention to both **raw** ridge and **simplex-projected** ridge (the fair row-stochastic comparator).
+
 ![rung2](results/rung_2/heatmap_A_vs_W.png)
 
-### Rung 3 — attention current block vs \(\Lambda W\) (FJ + anchors)
+**How to read the figure.** Same layout as rung 1, but both panels look slightly “softer” / noisier because the regression targets are corrupted. Structure is still visible: corresponding cells light up together, though absolute match is weaker than the noiseless case.
+
+**Interpretation.** Mean attention rel-F **0.188** ≤ mean projected-ridge **0.190** ≤ raw ridge **0.196** (3 seeds). Prediction MSE is essentially tied (~\(2.58\times10^{-3}\)). Noise raises the recovery floor for everyone, but softmax’s built-in row-stochasticity acts like helpful regularization — attention **matches or slightly beats** the fair ridge baseline. **Verdict: CONFIRMED** (run #2 decision rule). The “attention beats ridge under noise” claim survives the projected-ridge check.
+
+---
+
+### 🟠 Rung 3 — Friedkin–Johnsen + 2N anchor tokens
+
+**What we ran.** Turn on stubbornness (\(\Lambda \neq I\)): each agent partially anchors to its innate opinion \(x_i(0)\). Represent that with **\(2N\) tokens** per forward pass — \(N\) current opinions + \(N\) anchor tokens — raw-scalar values for both. Agent \(i\)’s attention row should put \(\lambda_i W_{ij}\) on current tokens and \(1-\lambda_i\) on its **own** anchor. Kept \(\sigma=0.05\); raised \(M\) to **2000** after ridge failed at \(M=200\). Primary metric: rel-Frobenius of the **current block** \(A_{\mathrm{cur}}\) vs \(\Lambda W\) (not vs \(W\) alone).
+
 ![rung3](results/rung_3/heatmap_A_vs_W.png)
 
-### Rung 4 — attention current block vs clustered \(W\)
+**How to read the figure.** Left = attention’s current-token block; right = true \(\Lambda W\). Unlike rungs 0–2, these panels do **not** match closely — the learned block is spikier / differently textured than the smooth dense \(\Lambda W\). That visual mismatch is the main failure of the ladder.
+
+**Interpretation.** Attention rel-F vs \(\Lambda W\) ≈ **0.41** vs ridge ≈ **0.24** (3 seeds); Spearman ≈ 0.76. Yet **stubbornness works**: \(\mathrm{diag}(A_{\mathrm{anc}})\) vs \(1-\lambda\) has corr ≈ **0.9995**, MAE ≈ 0.006. Prediction MSE still matches ridge (~\(2.57\times10^{-3}\)). So the model predicts well and reads stubbornness correctly, but does **not** recover the social-influence block at ridge quality — classic “good prediction, weak interpretability” under a joint 2N-way softmax when \(x(t)\approx x(0)\). **Verdict: partial success / documented failure** on the prize metric; carried forward as the open problem. (Run #2 later showed a *factored* ablation closes this gap — see below — but that is outside the locked single-softmax architecture.)
+
+---
+
+### 🔵 Rung 4 — Clustered / sparse influence graph
+
+**What we ran.** Keep FJ + anchors + \(\sigma=0.05\), \(M=2000\); change only the graph: **5 clusters** with strong within-cluster and weak between-cluster edges (more realistic, harder ID because agents in a cluster have collinear trajectories). Switch primary metrics per §5 to **Spearman + top-\(k\) edge precision** — Frobenius is secondary because softmax cannot put exact zeros on missing edges.
+
 ![rung4](results/rung_4/heatmap_A_vs_W.png)
 
----
+**How to read the figure.** Right (true \(W\)) shows block-diagonal cluster structure — bright squares along the diagonal blocks, dark elsewhere. Left (attention current block) should recover those blocks even if individual edge weights are mushy. Look for matching block outlines more than pixel-perfect intensities.
 
-## ✅ What worked
-
-1. **🚪 Data gate (rung 0).** With M=200 short trajectories from varied \(x(0)\), dense noiseless DeGroot is fully identifiable: ridge rel-Frobenius ≈ \(6\times10^{-6}\). Multi-trajectory excitation (§1b) is load-bearing; generator unit tests pass (row-stochastic \(W\); \(W^t\) dynamics; FJ closed form only when \(\lambda_i<1\)).
-
-2. **🟢 DeGroot attention recovers structure (rung 1).** Identity-driven Q/K + raw-scalar V recovers \(W\) with Spearman ≈ 0.999 and rel-Frobenius ≈ 0.025 across 3 seeds. The interpretability claim holds in the cleanest setting.
-
-3. **🟡 Noise does not break DeGroot recovery (rung 2).** At σ=0.05, attention **matches or slightly beats** ridge (0.190 vs 0.201) with tied prediction MSE. Softmax row-stochasticity behaves like helpful regularization under noisy targets. (Run #2 reconfirmed this against *projected* ridge.)
-
-4. **⚓ Anchor-token stubbornness readout (rung 3).** \(\mathrm{diag}(A_{\mathrm{anc}})\) recovers \(1-\lambda\) with correlation ≈ 0.999. The architectural rhyme between FJ anchors and attention tokens is empirically real.
-
-5. **🔵 Clustered structure discovery (rung 4).** Attention Spearman ≈ 0.60 ≈ ridge 0.62 and top-\(k\) edge precision ≈ 0.81–0.85. Influence *skeleton* is recoverable even when dense entrywise Frobenius is messy.
+**Interpretation.** Spearman vs \(W\) ≈ **0.60** (ridge Spearman vs \(\Lambda W\) ≈ 0.63); top-\(k\) precision ≈ **0.81–0.85**. Attention discovers which edges exist nearly as well as ridge. Both methods’ Spearman plateaus ~0.60–0.64 — a **data** ceiling from within-cluster collinearity, not an attention-specific failure. Stubbornness MAE remains low (~0.008). **Verdict: PASS** on the named sparse primaries; influence *skeleton* is recoverable. Dense Frobenius caveats from rung 3 still apply but do not dominate this stress test.
 
 ---
 
-## ❌ What failed (and why we think it failed)
+## ✅ What worked (compressed)
 
-### Rung 1 residual vs ridge (mild)
-Attention never reaches ridge’s numerical ceiling (0.025 vs \(6\times10^{-6}\)) under noiseless DeGroot.  
-**Class:** optimization under softmax / bilinear ID parameterization — **not** data (ridge perfect) or capacity (\(d=N\) suffices). Prediction MSE already ~\(10^{-6}\). Not patched by adding \(W_V\)/MLP (forbidden; would muddle the prize metric).
+1. **🚪 Rung 0** — data identifies dense DeGroot \(W\).
+2. **🟢 Rung 1** — identity attention recovers \(W\) (Spearman ≈ 0.999).
+3. **🟡 Rung 2** — noise does not break DeGroot recovery; attention ≥ projected ridge.
+4. **⚓ Rung 3 stubbornness** — anchor diagonal tracks \(1-\lambda\) (corr ≈ 0.999).
+5. **🔵 Rung 4** — clustered skeleton recovery competitive with ridge (top-\(k\) ≈ 0.81–0.85).
 
-### Rung 3 current-block recovery (main failure)
-Attention \(\\|A_{\mathrm{cur}} - \Lambda W\\|_F / \\|\Lambda W\\|_F\) ≈ **0.41** vs ridge **0.24** (M=2000, σ=0.05, 3 seeds).  
-**Class:** architecture + optimization, with a data contribution at small \(M\):
+## ❌ What failed (compressed)
 
-| Diagnostic | Ridge cur | Attn cur | Note |
-|------------|-----------|----------|------|
-| M=200, σ=0.05 | 0.83 | ~3.7 | data under-exciting → raised \(M\) |
-| M=200, σ=0 | \(8\times10^{-4}\) | ~3.3 (bad init) / 0.53 (LBFGS+orth) | architecture/opt even when data is fine |
-| M=2000, σ=0.05, Adam+orth | 0.24 | **0.41** | best noisy run; stub corr≈0.999 |
-
-Anchors are easy; the dense \(\Lambda W\) block under a joint 2N-way softmax is hard. Joint \([x(t); x(0)]\) covariance is ill-conditioned (\(\kappa_Z \sim 10^3\)) because FJ keeps opinions near anchors — the loss landscape is flatter for splitting mass between current and anchor tokens when their values are similar. Prediction MSE nonetheless matches ridge, so the model can predict without recovering \(A_{\mathrm{cur}} \approx \Lambda W\).
-
-### Rung 5 not attempted
-Rung 3’s prize-metric gap means 0–4 did not all succeed cleanly. Multi-head would further split influence across heads before the single-head FJ map is solved.
+1. **Rung 1 mild gap** — attn rel-F ≈ 0.025 vs ridge ≈ 0; optimization under softmax, not data/capacity.
+2. **Rung 3 main failure** — \(A_{\mathrm{cur}}\) vs \(\Lambda W\) ≈ 0.41 vs ridge ≈ 0.24; joint 2N-softmax + flat landscape when \(x\approx x(0)\).
+3. **Rung 5 skipped** — FJ prize metric not clean enough to add multi-head muddiness.
 
 ---
 
@@ -155,13 +179,23 @@ Bookkeeping fixes + tests of the “flat landscape” hypothesis (FJ keeps \(x(t
 
 Task 2 per-seed (rel-F): attn [0.190, 0.189, 0.184]; raw ridge [0.201, 0.196, 0.192]; proj ridge [0.195, 0.190, 0.186].
 
-### 📈 σ-sweep plot
+### 📈 Task 3 — FJ σ-sweep (noise-robustness stress test)
 
-Left: recovery (attention / raw ridge / projected ridge) vs process noise σ. Right: condition numbers vs σ. Both x-axes are log-scaled.
+**What we ran.** Freeze the rung-3 recipe (dense FJ, 2N anchors, \(M=2000\), \(d=50\), Adam, orthogonal init) and vary **only** process noise \(\sigma \in \{0, 0.02, 0.05, 0.1, 0.2, 0.35, 0.5\}\). Seed 0 at every σ; seeds \(\{0,1,2\}\) at σ∈\{0.05, 0.2\}. Pre-registered hypotheses: (i) \(\kappa_Z\) falls as σ rises; (ii) ridge recovery has an interior optimum in σ; (iii) the attention−ridge gap narrows as σ rises.
 
 ![sigma sweep](results/rung_3_sigma_sweep/recovery_and_kappa_vs_sigma.png)
 
-Seed-0 table (rel-F \(A_{\mathrm{cur}}\) vs \(\Lambda W\) / \(\kappa_Z\)):
+**How to read the figure.** **Left panel:** relative Frobenius vs \(\Lambda W\) for attention (circles), raw ridge (squares), and simplex-projected ridge (triangles) against σ on a log-x axis — lower is better recovery. **Right panel:** joint \(\kappa_Z\) (solid) and marginal \(\kappa\) (dashed) on log-y — lower means better-conditioned features for the N×2N regression.
+
+**Interpretation.**
+
+| Hypothesis | Verdict | What the plot shows |
+|------------|---------|---------------------|
+| (i) \(\kappa_Z\) ↓ with σ | ✅ SUPPORTED | Right panel: \(\kappa_Z\) falls 4037→21 (Spearman −1.0). Marginal \(\kappa\) barely moves — run #1’s “κ≈14 looks fine” hid the real pathology. |
+| (ii) ridge interior optimum | ❌ NOT SUPPORTED | Left panel: ridge is **best at σ=0** and worsens monotonically. At this \(M\), noise is mostly target corruption, not helpful excitation. |
+| (iii) attn−ridge gap narrows | ✅ SUPPORTED | Left panel: attention stays ~0.30–0.44 while ridge climbs past it; gap turns **negative** by σ=0.2 (attention beats raw ridge). Absolute attention recovery still plateaus — the gap closes mainly because ridge degrades faster. |
+
+Seed-0 numbers:
 
 | σ | attn | raw ridge | proj ridge | \(\kappa_Z\) | attn−ridge gap |
 |---|------|-----------|------------|-----|----------------|
@@ -173,25 +207,33 @@ Seed-0 table (rel-F \(A_{\mathrm{cur}}\) vs \(\Lambda W\) / \(\kappa_Z\)):
 | 0.35 | 0.434 | 0.532 | 0.445 | 40 | −0.097 |
 | 0.5 | 0.441 | 0.552 | 0.459 | 21 | −0.111 |
 
-*Gap = attention rel-F − raw ridge rel-F. Negative ⇒ attention beats unconstrained ridge (usually via the softmax constraint helping under heavy noise).*
+*Gap = attention rel-F − raw ridge rel-F. Negative ⇒ attention beats unconstrained ridge.*
 
-### 🧪 Verdicts on σ-sweep hypotheses (pre-registered)
+---
 
-1. **\(\kappa_Z\) falls as σ rises — ✅ SUPPORTED.** Spearman(σ, \(\kappa_Z\))=−1.0 (4037→21). Marginal κ alone (~14 in run #1) hid the N×2N pathology.
-2. **Ridge \(\Lambda W\) recovery non-monotone with interior optimum — ❌ NOT SUPPORTED.** Best at σ=0; degrades monotonically at M=2000. “Some noise helps” (§1b) does not appear for this well-excited FJ operator fit — noise is mostly target corruption here. Negative result retained.
-3. **Attention−ridge gap narrows as σ rises — ✅ SUPPORTED.** Spearman(σ, gap)=−1.0; gap turns negative by σ=0.2. Absolute attention recovery still plateaus ~0.43–0.44; the gap closes mainly because ridge worsens faster.
+### 🔄 Task 4 — Unrolled (multi-step) training on FJ
 
-### 🔄 Unrolled-training success criterion
+**What we ran.** Same rung-3 world (σ=0.05, \(M=2000\)), but train with the §4 **graduation path**: feed true \(x(t)\), roll the model \(k\) steps on its **own** predictions (anchors stay fixed at true \(x(0)\)), average MSE against stored \(x(t+1)\ldots x(t+k)\). Curriculum \(k=1\) (300 ep) → \(k=2\) → \(k=4\), grad clip 1.0, seeds \(\{0,1,2\}\). Success criterion fixed first: mean rel-F must beat one-step ≈0.40 by >0.05 (i.e. mean < 0.35); stub corr must stay >0.99.
 
-**Criterion (pre-registered):** mean unrolled rel-F improves on one-step ≈0.40 by > seed spread ≈0.05 (i.e. mean < 0.35); interesting if ≈ ridge 0.23; stub corr > 0.99.
+![unrolled](results/rung_3_unrolled/heatmap_A_vs_W.png)
 
-**Result: ❌ NO SUCCESS.** Mean unrolled rel-F = **0.409** (seeds 0.424 / 0.391 / 0.414) — indistinguishable from one-step. Training stable (no NaN/explosion with curriculum + grad clip). Stubbornness corr stays ≈0.9998. Unrolling alone does not cure the joint-softmax / flat-landscape gap.
+**How to read the figure.** Same as rung 3: left = unrolled-trained \(A_{\mathrm{cur}}\), right = true \(\Lambda W\). If unrolling cured the flat landscape, the left panel should look much closer to the right than rung 3’s heatmap did.
 
-### 🧩 Factored-logit diagnostic (Task 5 — ablation, not headline)
+**Interpretation.** It does **not**. Mean unrolled rel-F = **0.409** (seeds 0.424 / 0.391 / 0.414) — indistinguishable from one-step 0.40. Stubbornness corr stays ≈0.9998; training was stable (no NaN/explosion). **Verdict: ❌ NO SUCCESS.** Multi-step self-rollout preserves prediction and stubbornness but does not improve \(A_{\mathrm{cur}}\) quality. The flat current-vs-anchor directions are not cured by unrolling alone under the joint 2N-softmax.
 
-> ⚠️ **Not a headline result.** Architecture ablation outside the locked run-#1 constraint set.
+---
 
-Factored gates + N-token softmax: rel-F(\(A_{\mathrm{cur}}\) vs \(\Lambda W\)) = **0.094**, Spearman 0.987, gate↔\((1-\lambda)\) corr ≈ 1.000 — **beats ridge (0.237)**. Interprets the run-#1/Task-4 failure: the gap was largely the *joint* 2N-way softmax coupling currents and anchors, not the bilinear ID map itself. Do not promote to headline without a new protocol decision.
+### 🧩 Task 5 — Factored-logit diagnostic (ablation, not headline)
+
+> ⚠️ **Not a headline result.** Architecture ablation outside the locked run-#1 “single joint softmax over 2N tokens” constraint.
+
+**What we ran.** Same data as rung 3 (σ=0.05, \(M=2000\), seed 0), but factor each agent’s row: a learned gate \(g_i \approx 1-\lambda_i\) puts mass on the own anchor; the remaining \((1-g_i)\) is a softmax over the **\(N\) current tokens only** (identity Q/K as before). Values still raw scalars. Question: if this recovers \(\Lambda W\) near ridge, the rung-3 gap was the *joint* 2N-softmax; if not, the bilinear ID map itself is the bottleneck.
+
+![factored](results/rung_3_factored_diag/heatmap_A_vs_W.png)
+
+**How to read the figure.** Left = factored \(A_{\mathrm{cur}}\); right = true \(\Lambda W\). Compare to the rung-3 heatmap above: here the two panels should look much more alike if factoring fixed the gap.
+
+**Interpretation.** They do. Rel-F(\(A_{\mathrm{cur}}\) vs \(\Lambda W\)) = **0.094** (joint softmax was **0.407**; ridge **0.237**), Spearman **0.987**, gate↔\((1-\lambda)\) corr ≈ **1.000**. The factored head **beats ridge** on the prize metric. **Verdict:** the run-#1/Task-4 failure was largely the joint 2N-way softmax coupling currents and anchors — not a failure of identity-driven Q/K or raw values. Do not promote to the headline architecture without a new protocol decision.
 
 ---
 
